@@ -1,5 +1,6 @@
 import asyncio
 import logging
+from contextlib import asynccontextmanager
 
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
@@ -11,11 +12,16 @@ from handlers import common, appointment, my_appointments
 logging.basicConfig(level=logging.INFO)
 
 
-async def main():
+@asynccontextmanager
+async def lifespan(*args, **kwargs):
     init_db()
+    yield
 
+
+async def main():
     bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode="HTML"))
     dp = Dispatcher()
+    dp.startup.register(lifespan)
 
     dp.include_router(common.router)
     dp.include_router(appointment.router)

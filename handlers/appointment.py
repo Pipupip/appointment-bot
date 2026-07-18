@@ -56,7 +56,7 @@ async def start_appointment(message: Message, state: FSMContext):
     )
 
 
-@router.message(AppointmentFSM.choose_service)
+@router.message(AppointmentFSM.choose_service, F.text != "Отмена")
 async def choose_service(message: Message, state: FSMContext):
     if message.text not in SERVICES:
         await message.answer("Пожалуйста, выберите услугу из меню.")
@@ -69,7 +69,7 @@ async def choose_service(message: Message, state: FSMContext):
     )
 
 
-@router.message(AppointmentFSM.choose_master)
+@router.message(AppointmentFSM.choose_master, F.text != "Отмена")
 async def choose_master(message: Message, state: FSMContext):
     if message.text not in MASTERS:
         await message.answer("Пожалуйста, выберите мастера из меню.")
@@ -82,7 +82,7 @@ async def choose_master(message: Message, state: FSMContext):
     )
 
 
-@router.message(AppointmentFSM.choose_date_time)
+@router.message(AppointmentFSM.choose_date_time, F.text != "Отмена")
 async def choose_date_time(message: Message, state: FSMContext):
     if message.text not in TIME_SLOTS:
         await message.answer("Пожалуйста, выберите время из меню.")
@@ -131,5 +131,7 @@ async def confirm_appointment(message: Message, state: FSMContext):
 
 @router.message(F.text == "Отмена")
 async def cancel(message: Message, state: FSMContext):
-    await state.clear()
+    current_state = await state.get_state()
+    if current_state is not None:
+        await state.clear()
     await message.answer("Действие отменено.", reply_markup=main_keyboard())

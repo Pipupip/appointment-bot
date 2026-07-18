@@ -1,5 +1,6 @@
 import sqlite3
 import os
+from typing import Optional
 
 DB_PATH = os.path.join(os.path.dirname(__file__), "appointments.db")
 
@@ -27,7 +28,7 @@ def init_db():
     conn.close()
 
 
-def save_appointment(user_id: int, username: str | None, service: str, master: str, date_time: str):
+def save_appointment(user_id: int, username: Optional[str], service: str, master: str, date_time: str):
     conn = get_connection()
     conn.execute(
         "INSERT INTO appointments (user_id, username, service, master, date_time) VALUES (?, ?, ?, ?, ?)",
@@ -35,6 +36,16 @@ def save_appointment(user_id: int, username: str | None, service: str, master: s
     )
     conn.commit()
     conn.close()
+
+
+def is_slot_available(service: str, master: str, date_time: str) -> bool:
+    conn = get_connection()
+    row = conn.execute(
+        "SELECT 1 FROM appointments WHERE service = ? AND master = ? AND date_time = ?",
+        (service, master, date_time),
+    ).fetchone()
+    conn.close()
+    return row is None
 
 
 def get_user_appointments(user_id: int) -> list:
@@ -53,7 +64,7 @@ def get_all_users() -> list:
         "SELECT DISTINCT user_id, username FROM appointments"
     ).fetchall()
     conn.close()
-    return rows
+    return [dict(r) for r in rows]
 
 
 def get_today_appointments_count() -> int:
